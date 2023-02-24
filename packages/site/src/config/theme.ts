@@ -41,7 +41,7 @@ const theme = {
 export const light: DefaultTheme = {
   colors: {
     background: {
-      default: '#FFFFFF',
+      default: '#9898ff',
       alternative: '#F2F4F6',
       inverse: '#141618',
     },
@@ -80,7 +80,7 @@ export const light: DefaultTheme = {
 export const dark: DefaultTheme = {
   colors: {
     background: {
-      default: '#24272A',
+      default: '#00008B',
       alternative: '#141618',
       inverse: '#FFFFFF',
     },

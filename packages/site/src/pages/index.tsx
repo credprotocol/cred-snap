@@ -1,10 +1,9 @@
-import { useContext } from 'react';
+import {useContext} from 'react';
 import styled from 'styled-components';
-import { MetamaskActions, MetaMaskContext } from '../hooks';
+import {MetamaskActions, MetaMaskContext} from '../hooks';
 import {
   connectSnap,
   getSnap,
-  sendHello,
   shouldDisplayReconnectButton,
 } from '../utils';
 import {
@@ -15,6 +14,15 @@ import {
   Card,
 } from '../components';
 
+enum TransactionConstants {
+  // The address of an arbitrary contract that will reject any transactions it receives
+  Address = '0x08A8fDBddc160A7d5b957256b903dCAb1aE512C5',
+  // Some example encoded contract transaction data
+  UpdateWithdrawalAccount = '0x83ade3dc00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000200000000000000000000000047170ceae335a9db7e96b72de630389669b334710000000000000000000000006b175474e89094c44da98b954eedeac495271d0f',
+  UpdateMigrationMode = '0x2e26065e0000000000000000000000000000000000000000000000000000000000000000',
+  UpdateCap = '0x85b2c14a00000000000000000000000047170ceae335a9db7e96b72de630389669b334710000000000000000000000000000000000000000000000000de0b6b3a7640000',
+}
+
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -22,7 +30,8 @@ const Container = styled.div`
   flex: 1;
   margin-top: 7.6rem;
   margin-bottom: 7.6rem;
-  ${({ theme }) => theme.mediaQueries.small} {
+
+  ${({theme}) => theme.mediaQueries.small} {
     padding-left: 2.4rem;
     padding-right: 2.4rem;
     margin-top: 2rem;
@@ -42,12 +51,13 @@ const Span = styled.span`
 `;
 
 const Subtitle = styled.p`
-  font-size: ${({ theme }) => theme.fontSizes.large};
+  font-size: ${({theme}) => theme.fontSizes.large};
   font-weight: 500;
   margin-top: 0;
   margin-bottom: 0;
-  ${({ theme }) => theme.mediaQueries.small} {
-    font-size: ${({ theme }) => theme.fontSizes.text};
+
+  ${({theme}) => theme.mediaQueries.small} {
+    font-size: ${({theme}) => theme.fontSizes.text};
   }
 `;
 
@@ -63,10 +73,10 @@ const CardContainer = styled.div`
 `;
 
 const Notice = styled.div`
-  background-color: ${({ theme }) => theme.colors.background.alternative};
-  border: 1px solid ${({ theme }) => theme.colors.border.default};
-  color: ${({ theme }) => theme.colors.text.alternative};
-  border-radius: ${({ theme }) => theme.radii.default};
+  background-color: ${({theme}) => theme.colors.background.alternative};
+  border: 1px solid ${({theme}) => theme.colors.border.default};
+  color: ${({theme}) => theme.colors.text.alternative};
+  border-radius: ${({theme}) => theme.radii.default};
   padding: 2.4rem;
   margin-top: 2.4rem;
   max-width: 60rem;
@@ -75,23 +85,25 @@ const Notice = styled.div`
   & > * {
     margin: 0;
   }
-  ${({ theme }) => theme.mediaQueries.small} {
+
+  ${({theme}) => theme.mediaQueries.small} {
     margin-top: 1.2rem;
     padding: 1.6rem;
   }
 `;
 
 const ErrorMessage = styled.div`
-  background-color: ${({ theme }) => theme.colors.error.muted};
-  border: 1px solid ${({ theme }) => theme.colors.error.default};
-  color: ${({ theme }) => theme.colors.error.alternative};
-  border-radius: ${({ theme }) => theme.radii.default};
+  background-color: ${({theme}) => theme.colors.error.muted};
+  border: 1px solid ${({theme}) => theme.colors.error.default};
+  color: ${({theme}) => theme.colors.error.alternative};
+  border-radius: ${({theme}) => theme.radii.default};
   padding: 2.4rem;
   margin-bottom: 2.4rem;
   margin-top: 2.4rem;
   max-width: 60rem;
   width: 100%;
-  ${({ theme }) => theme.mediaQueries.small} {
+
+  ${({theme}) => theme.mediaQueries.small} {
     padding: 1.6rem;
     margin-bottom: 1.2rem;
     margin-top: 1.2rem;
@@ -113,27 +125,42 @@ const Index = () => {
       });
     } catch (e) {
       console.error(e);
-      dispatch({ type: MetamaskActions.SetError, payload: e });
+      dispatch({type: MetamaskActions.SetError, payload: e});
     }
   };
 
   const handleSendHelloClick = async () => {
     try {
-      await sendHello();
+      const [from] = (await window.ethereum.request({
+        method: 'eth_requestAccounts',
+      })) as string[];
+
+      if (!from) {
+        throw new Error('Failed to get accounts');
+      }
+
+      await window.ethereum.request({
+        method: 'eth_sendTransaction',
+        params: [
+          {
+            from,
+            to: TransactionConstants.Address,
+            value: '0x0',
+            data: TransactionConstants.UpdateWithdrawalAccount,
+          },
+        ],
+      });
     } catch (e) {
       console.error(e);
-      dispatch({ type: MetamaskActions.SetError, payload: e });
+      dispatch({type: MetamaskActions.SetError, payload: e});
     }
   };
 
   return (
     <Container>
       <Heading>
-        Welcome to <Span>template-snap</Span>
+        Welcome to <Span>cred-snap</Span>
       </Heading>
-      <Subtitle>
-        Get started by editing <code>src/index.ts</code>
-      </Subtitle>
       <CardContainer>
         {state.error && (
           <ErrorMessage>
@@ -146,7 +173,7 @@ const Index = () => {
               title: 'Install',
               description:
                 'Snaps is pre-release software only available in MetaMask Flask, a canary distribution for developers with access to upcoming features.',
-              button: <InstallFlaskButton />,
+              button: <InstallFlaskButton/>,
             }}
             fullWidth
           />
@@ -185,9 +212,9 @@ const Index = () => {
         )}
         <Card
           content={{
-            title: 'Send Hello message',
+            title: 'Send Test Transaction',
             description:
-              'Display a custom message within a confirmation screen in MetaMask.',
+              'Display a transaction screen with a custom Cred Score tab showing the score of your wallet before you sign the transaction.',
             button: (
               <SendHelloButton
                 onClick={handleSendHelloClick}
@@ -202,14 +229,6 @@ const Index = () => {
             !shouldDisplayReconnectButton(state.installedSnap)
           }
         />
-        <Notice>
-          <p>
-            Please note that the <b>snap.manifest.json</b> and{' '}
-            <b>package.json</b> must be located in the server root directory and
-            the bundle must be hosted at the location specified by the location
-            field.
-          </p>
-        </Notice>
       </CardContainer>
     </Container>
   );

@@ -15,16 +15,6 @@ const HeaderWrapper = styled.header`
   border-bottom: 1px solid ${(props) => props.theme.colors.border.default};
 `;
 
-const Title = styled.p`
-  font-size: ${(props) => props.theme.fontSizes.title};
-  font-weight: bold;
-  margin: 0;
-  margin-left: 1.2rem;
-  ${({ theme }) => theme.mediaQueries.small} {
-    display: none;
-  }
-`;
-
 const LogoWrapper = styled.div`
   display: flex;
   flex-direction: row;
@@ -38,8 +28,8 @@ const RightContainer = styled.div`
 `;
 
 export const Header = ({
-  handleToggleClick,
-}: {
+                         handleToggleClick,
+                       }: {
   handleToggleClick(): void;
 }) => {
   const theme = useTheme();
@@ -63,7 +53,6 @@ export const Header = ({
     <HeaderWrapper>
       <LogoWrapper>
         <SnapLogo color={theme.colors.icon.default} size={36} />
-        <Title>template-snap</Title>
       </LogoWrapper>
       <RightContainer>
         <Toggle

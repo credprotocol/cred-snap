@@ -1,33 +1,52 @@
-import { OnRpcRequestHandler } from '@metamask/snaps-types';
-import { panel, text } from '@metamask/snaps-ui';
+import { OnTransactionHandler } from '@metamask/snap-types';
+import { hasProperty, isObject, Json } from '@metamask/utils';
+import { panel, heading, text } from '@metamask/snaps-ui';
 
-/**
- * Handle incoming JSON-RPC requests, sent through `wallet_invokeSnap`.
- *
- * @param args - The request handler args as object.
- * @param args.origin - The origin of the request, e.g., the website that
- * invoked the snap.
- * @param args.request - A validated JSON-RPC request object.
- * @returns The result of `snap_dialog`.
- * @throws If the request method is not valid for this snap.
- */
-export const onRpcRequest: OnRpcRequestHandler = ({ origin, request }) => {
-  switch (request.method) {
-    case 'hello':
-      return snap.request({
-        method: 'snap_dialog',
-        params: {
-          type: 'Confirmation',
-          content: panel([
-            text(`Hello, **${origin}**!`),
-            text('This custom confirmation is just for display purposes.'),
-            text(
-              'But you can edit the snap source code to make it do something, if you want to!',
-            ),
-          ]),
-        },
-      });
-    default:
-      throw new Error('Method not found.');
+// The API endpoint to get a list of functions by 4 byte signature.
+const API_ENDPOINT = 'https://beta.credprotocol.com/api/score/address/';
+
+export const onTransaction: OnTransactionHandler = async ({ transaction }) => {
+  const insights: { type: string; params?: Json } = {
+    type: 'Unknown Transaction',
+  };
+  if (
+    !isObject(transaction) ||
+    !hasProperty(transaction, 'data') ||
+    typeof transaction.data !== 'string'
+  ) {
+    console.warn('Unknown transaction type.');
+    return { insights };
   }
+
+  // fetch data - cred
+  const response = await fetch(`${API_ENDPOINT}${transaction.from}`, {
+    method: 'get',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Token REDACTED',
+    },
+  });
+
+  const json = await response.json();
+
+  const score = json.value;
+  const address = transaction.from as string;
+
+  if (!response.ok) {
+    if (json.status_code === 422) {
+      throw new Error('Unscorable address. Not enough data to score.');
+    }
+    throw new Error('Failed to fetch from Cred API.');
+  }
+
+  // return { insights: { foo: 'bar' } };
+  return {
+    content: panel([
+      heading('Cred Score Data'),
+      text('Account Address:'),
+      text(address),
+      text('Cred Score:'),
+      text(score.toString()),
+    ]),
+  };
 };
