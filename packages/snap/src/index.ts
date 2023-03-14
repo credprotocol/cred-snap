@@ -23,7 +23,7 @@ export const onTransaction: OnTransactionHandler = async ({ transaction }) => {
     method: 'get',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: 'Token REDACTED',
+      Authorization: `Token ${process.env.CRED_API_TOKEN}`,
     },
   });
 
